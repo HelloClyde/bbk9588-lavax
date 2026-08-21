@@ -4,9 +4,8 @@
   <img src="assets/lavax-icon.png" width="180" alt="LavaXVM for BBK 9588 icon">
 </p>
 
-这是把 LavaXVM 3.5 的 Nintendo DS 前端移植到步步高 9588 原生 BDA 的实验性端口。
-它不是 NDS 模拟器：VM 解释器直接以 MIPS BDA 运行，显示、实体键、触摸、时钟和文件
-系统由 9588 平台层实现。
+这是把 LavaXVM 3.5 移植到步步高 9588 原生 BDA 的实验性端口。VM 解释器直接以
+MIPS BDA 运行，显示、实体键、触摸、时钟和文件系统由 9588 平台层实现。
 
 ## 当前实现
 
