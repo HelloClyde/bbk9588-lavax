@@ -15,6 +15,7 @@
 #define PHYSICAL_HEIGHT 320
 #define RAW_EVENTS_PER_TICK 8u
 #define EXIT_HOLD_MS 1500u
+#define PHYSICAL_KEY_RESUME_MS 100u
 
 typedef struct soft_row {
     const char *const *labels;
@@ -43,6 +44,7 @@ static int g_touch_key;
 static int g_pen_down;
 static int g_pen_x;
 static int g_pen_y;
+static u32 g_physical_keys_resume_at;
 static const unsigned char *g_game_indices;
 static const unsigned char *g_palette;
 static int g_game_width;
@@ -341,7 +343,7 @@ static void read_touch_position(int *logical_x, int *logical_y)
     *logical_y = (int)physical_x;
 }
 
-static void poll_touch(void)
+static void poll_touch(u32 now)
 {
     unsigned count = 0;
     bda_gui_raw_event_t event;
@@ -351,6 +353,7 @@ static void poll_touch(void)
         int x, y;
         switch ((u32)event.code) {
         case BDA_INPUT_EVENT_TOUCH_DOWN:
+            g_physical_keys_resume_at = now + PHYSICAL_KEY_RESUME_MS;
             read_touch_position(&x, &y);
             g_touch_down = 1;
             g_touch_key = soft_key_at(x, y);
@@ -358,12 +361,14 @@ static void poll_touch(void)
             else update_pen(x, y);
             break;
         case BDA_INPUT_EVENT_TOUCH_MOVE:
+            g_physical_keys_resume_at = now + PHYSICAL_KEY_RESUME_MS;
             if (g_touch_down && !g_touch_key) {
                 read_touch_position(&x, &y);
                 update_pen(x, y);
             }
             break;
         case BDA_INPUT_EVENT_TOUCH_UP:
+            g_physical_keys_resume_at = now + PHYSICAL_KEY_RESUME_MS;
             if (g_touch_key) g_keys[g_touch_key] = 0;
             g_touch_key = 0;
             g_touch_down = 0;
@@ -375,14 +380,18 @@ static void poll_touch(void)
     }
 }
 
-static void poll_physical_keys(void)
+static void poll_physical_keys(u32 now)
 {
     bda_gui_input_packet_t packet;
     int touch_code = g_touch_key;
-    memset(&packet, 0, sizeof(packet));
-    (void)bda_gui_input_packet(&packet);
     memset(g_keys, 0, sizeof(g_keys));
     if (touch_code) g_keys[touch_code] = 1;
+    /* C200 may expose a touch as ESC in the six-byte physical-key packet. */
+    if (g_touch_down || (g_physical_keys_resume_at &&
+        (int32_t)(now - g_physical_keys_resume_at) < 0)) return;
+    g_physical_keys_resume_at = 0;
+    memset(&packet, 0, sizeof(packet));
+    (void)bda_gui_input_packet(&packet);
     if (bda_gui_input_packet_key_pressed(&packet, BDA_KEY_LEFT)) g_keys[0x14] = 1;
     if (bda_gui_input_packet_key_pressed(&packet, BDA_KEY_RIGHT)) g_keys[0x15] = 1;
     if (bda_gui_input_packet_key_pressed(&packet, BDA_KEY_DOWN)) g_keys[0x17] = 1;
@@ -402,6 +411,7 @@ int bbk9588_platform_open(void)
     memset(g_keys, 0, sizeof(g_keys));
     g_detached = g_close_requested = g_exit_combo = 0;
     g_touch_down = g_touch_key = g_pen_down = 0;
+    g_physical_keys_resume_at = 0;
     g_status_mode = 0;
     g_draw = g_draw_owner = 0;
     g_draw_object = 0;
@@ -464,8 +474,8 @@ void bbk9588_platform_tick(void)
 {
     u32 now = g_timer_started ? bda_gui_millisecond_count() :
         bda_gui_tick_count_25ms() * 25u;
-    poll_physical_keys();
-    poll_touch();
+    poll_touch(now);
+    poll_physical_keys(now);
     {
         u32 elapsed = now - g_vm_clock;
         if (elapsed > 250u) elapsed = 250u;
