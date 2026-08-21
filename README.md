@@ -12,7 +12,7 @@ MIPS BDA 运行，显示、实体键、触摸、时钟和文件系统由 9588 �
 - 支持 LavaX 常见的 `160x80`（2 倍）和 `240x160` 画面，横屏旋转到 9588。
 - 实体方向键随横屏方向映射；Enter/ESC 直接传给 LavaX。
 - 屏幕下方提供 QWERTY、功能键、翻页键和方向软键盘。
-- 触摸游戏区会转换成 LavaX 逻辑坐标。
+- 触摸游戏区会转换成 LavaX 逻辑坐标，并与实体 ESC 输入隔离。
 - 自动查找 `B:\LavaXOS`，找不到时回退到 `A:\LavaXOS`。
 - 同时按住 Enter + ESC 1.5 秒退出 BDA。
 - 使用重新设计的透明菜单图标，源图位于 `assets\lavax-icon.png`。
@@ -48,7 +48,9 @@ cd lavax-for9588
 ```
 
 `bootstrap.ps1` 会按 `deps.lock.psd1` 拉取固定版本的 SDK；也可通过
-`BDA_SDK_ROOT` 指定已有 SDK。
+`BDA_SDK_ROOT` 指定已有 SDK。本仓库与
+[bbk9588-bda-sdk](https://github.com/HelloClyde/bbk9588-bda-sdk) 由同一作者维护；后者提供
+9588 BDA 的构建、打包和模拟器测试基础设施。
 输出为 `build\LavaX-9588.bda`。
 
 启动隔离的 9588 模拟器测试 NAND：
@@ -99,8 +101,6 @@ BDA。若缺少 `Shell.sys`，程序会显示可读的诊断页面而不是黑�
 - 感谢 [Lee（jacklee72）的原版 Lava / LavaXVM / LavaXOS](https://gitee.com/jacklee72/lavaxos)，
   本项目以其 VM 设计与开源代码为基础。
 - 感谢原项目中的 Nintendo DS 平台实现，为本次平台移植提供了重要参考。
-- 感谢 [bbk9588-bda-sdk](https://github.com/HelloClyde/bbk9588-bda-sdk) 提供 9588 BDA
-  构建、打包与模拟器测试基础设施。
 
 ## 许可证
 
