@@ -98,10 +98,10 @@ BDA。若缺少 `Shell.sys`，程序会显示可读的诊断页面而不是黑�
 
 ## 致谢
 
-- 感谢 [Lee（jacklee72）的原版 Lava / LavaXVM / LavaXOS](https://gitee.com/jacklee72/lavaxos)，
-  本项目以其 VM 设计与开源代码为基础。
-- 感谢原项目中的 [Nintendo DS 平台实现](https://gitee.com/jacklee72/lavaxos/tree/master/LavaXVM)，
-  为本次平台移植提供了重要参考。
+- 感谢 [原版 LavaXVM](https://github.com/leesoft-mirage/LavaXVM)，本项目以其 VM 设计与
+  核心代码为基础。
+- 感谢 [Nintendo DS 版本 LavaXOS](https://gitee.com/jacklee72/lavaxos)，为本次平台移植
+  提供了重要参考。
 
 ## 许可证
 
