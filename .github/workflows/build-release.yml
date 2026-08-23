@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -34,7 +34,7 @@ jobs:
         run: .\tools\bootstrap.ps1 -SkipToolchainSetup
 
       - name: Cache MIPS toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .deps/sdk/.toolchain
           key: mipsel-none-elf-15.2.0-8ba866e25c9826ee-full-v1
@@ -54,7 +54,7 @@ jobs:
           "$hash  LavaX.bda" | Set-Content -LiteralPath build\LavaX.bda.sha256 -Encoding ascii
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LavaX-bda
           path: |
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: LavaX-bda
           path: release-assets
