@@ -1,0 +1,98 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "utf-8"
+
+jobs:
+  build:
+    name: Build LavaX.bda
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check out pinned BBK 9588 SDK
+        shell: pwsh
+        run: .\tools\bootstrap.ps1 -SkipToolchainSetup
+
+      - name: Cache MIPS toolchain
+        uses: actions/cache@v4
+        with:
+          path: .deps/sdk/.toolchain
+          key: mipsel-none-elf-15.2.0-8ba866e25c9826ee-full-v1
+
+      - name: Install verified MIPS toolchain
+        shell: pwsh
+        run: .\.deps\sdk\scripts\setup_toolchain.ps1
+
+      - name: Build BDA
+        shell: pwsh
+        run: .\tools\build.ps1 -Clean -SkipToolchainSetup
+
+      - name: Write SHA-256 checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash -LiteralPath build\LavaX.bda -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  LavaX.bda" | Set-Content -LiteralPath build\LavaX.bda.sha256 -Encoding ascii
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LavaX-bda
+          path: |
+            build/LavaX.bda
+            build/LavaX.bda.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LavaX-bda
+          path: release-assets
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" \
+              release-assets/LavaX.bda \
+              release-assets/LavaX.bda.sha256 \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              release-assets/LavaX.bda \
+              release-assets/LavaX.bda.sha256 \
+              --verify-tag \
+              --generate-notes \
+              --title "LavaX $GITHUB_REF_NAME"
+          fi

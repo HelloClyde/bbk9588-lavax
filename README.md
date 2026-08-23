@@ -27,7 +27,18 @@ MIPS BDA 运行，显示、实体键、触摸、时钟和文件系统由 9588 �
 
 ## 快速开始
 
-需要 Windows PowerShell、Git 和 Python 3。首次构建：
+1. 从 [最新 Release](https://github.com/HelloClyde/bbk9588-lavax/releases/latest)
+   下载 `LavaX.bda`，通过设备正常的 BDA 安装方式安装；程序名称显示为 `LavaX`。
+2. 从你有权使用的原版介质中取出完整的 `LavaXOS` 文件夹，复制到
+   `B:\LavaXOS`；没有 B 盘时也可放到 `A:\LavaXOS`。
+3. 确认至少存在 `LavaXOS\System\Shell.sys`，然后启动 `LavaX`。
+4. 进入 Shell 后依次选择 `LAVA`、`Lava8`，再选择 `.lav` 游戏并按
+   Enter/确定运行。按 ESC/退出返回上一级；同时按住 Enter + ESC 1.5 秒退出 BDA。
+
+Release 只包含 BDA，不包含 LavaXOS、游戏或 ROM。下载后可用同一 Release 中的
+`LavaX.bda.sha256` 校验文件完整性。
+
+如果需要从源码构建，请准备 Windows PowerShell、Git 和 Python 3：
 
 ```powershell
 git clone https://github.com/HelloClyde/bbk9588-lavax.git
@@ -36,8 +47,7 @@ cd bbk9588-lavax
 .\tools\build.ps1 -Clean
 ```
 
-构建结果为 `build\LavaX.bda`。将它复制到 9588 的 BDA 程序目录，再把你有权
-使用的完整 `LavaXOS` 目录放到 `B:\LavaXOS`（或 `A:\LavaXOS`）即可启动。
+构建结果为 `build\LavaX.bda`。
 
 ## 选择游戏
 
@@ -58,6 +68,15 @@ cd lavax-for9588
 [bbk9588-bda-sdk](https://github.com/HelloClyde/bbk9588-bda-sdk) 由同一作者维护；后者提供
 9588 BDA 的构建、打包和模拟器测试基础设施。
 输出为 `build\LavaX.bda`。
+
+仓库的 GitHub Actions 会在 `main`、Pull Request 和手动触发时验证构建。推送
+任意 Tag（建议使用 `v0.1.0` 这样的版本号）后，会自动创建 GitHub Release，并附带
+`LavaX.bda` 与 SHA-256 校验文件：
+
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 启动隔离的 9588 模拟器测试 NAND：
 
