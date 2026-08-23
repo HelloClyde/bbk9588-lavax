@@ -121,7 +121,7 @@ $elf = Join-Path $build 'LavaX-9588.elf'
 $raw = Join-Path $build 'LavaX-9588.bin'
 $map = Join-Path $build 'LavaX-9588.map'
 $dump = Join-Path $build 'LavaX-9588.dump.txt'
-$bda = Join-Path $build 'LavaX-9588.bda'
+$bda = Join-Path $build 'LavaX.bda'
 $linker = Join-Path $root 'linker\bda.ld'
 $icon = Join-Path $root 'assets\lavax-icon.png'
 if (-not (Test-Path -LiteralPath $icon -PathType Leaf)) {
@@ -139,7 +139,7 @@ Invoke-Checked $objcopy @('-O','binary',$elf,$raw)
 if ($LASTEXITCODE -ne 0) { throw 'objdump failed' }
 Invoke-Checked $python @(
     '-X','utf8','-s',(Join-Path $PSScriptRoot 'pack-prelinked.py'),$raw,
-    '--sdk',$sdk,'--output',$bda,'--title','LavaX游戏','--icon',$icon
+    '--sdk',$sdk,'--output',$bda,'--title','LavaX','--icon',$icon
 )
 Write-Host "ELF: $elf"
 Write-Host "BDA: $bda"

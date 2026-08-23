@@ -19,7 +19,7 @@ $sdk = if ($env:BDA_SDK_ROOT) {
 } else {
     Join-Path $root '.deps\sdk'
 }
-$bda = Join-Path $root 'build\LavaX-9588.bda'
+$bda = Join-Path $root 'build\LavaX.bda'
 $helper = Join-Path $sdk 'scripts\test_bda_in_emulator.ps1'
 if (-not (Test-Path -LiteralPath $bda)) {
     & (Join-Path $PSScriptRoot 'build.ps1')

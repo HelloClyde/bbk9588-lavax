@@ -36,8 +36,14 @@ cd bbk9588-lavax
 .\tools\build.ps1 -Clean
 ```
 
-构建结果为 `build\LavaX-9588.bda`。将它复制到 9588 的 BDA 程序目录，再把你有权
+构建结果为 `build\LavaX.bda`。将它复制到 9588 的 BDA 程序目录，再把你有权
 使用的完整 `LavaXOS` 目录放到 `B:\LavaXOS`（或 `A:\LavaXOS`）即可启动。
+
+## 选择游戏
+
+正常启动后会进入 LavaXOS Shell 的根目录。用方向键选择 `LAVA`，按 Enter/确定进入，
+再选择 `Lava8` 和其中的 `.lav` 游戏，按 Enter/确定启动；按 ESC/退出返回上一级。
+`PROGRAM` 目录则用于浏览 LavaXOS 应用。
 
 ## 构建
 
@@ -51,7 +57,7 @@ cd lavax-for9588
 `BDA_SDK_ROOT` 指定已有 SDK。本仓库与
 [bbk9588-bda-sdk](https://github.com/HelloClyde/bbk9588-bda-sdk) 由同一作者维护；后者提供
 9588 BDA 的构建、打包和模拟器测试基础设施。
-输出为 `build\LavaX-9588.bda`。
+输出为 `build\LavaX.bda`。
 
 启动隔离的 9588 模拟器测试 NAND：
 

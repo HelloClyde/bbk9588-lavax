@@ -8,6 +8,9 @@
 #include <sys/stat.h>
 
 #define LAVAX_PATH_MAX 260u
+#define LAVAX_FIND_FILE_ATTRIBUTES 0x27u
+/* Include the FAT directory bit (0x10) when discovering Shell entries. */
+#define LAVAX_FIND_ENTRY_ATTRIBUTES 0x37u
 
 struct j2me9588_file {
     int descriptor;
@@ -30,7 +33,7 @@ static int path_exists_raw(const char *path)
     bda_fs_find_data_t find;
     int result;
     bda_fs_find_data_init(&find);
-    result = bda_fs_findfirst(path, 0x27u, &find);
+    result = bda_fs_findfirst(path, LAVAX_FIND_FILE_ATTRIBUTES, &find);
     if (result == -1) return 0;
     (void)bda_fs_findclose(&find);
     return 1;
@@ -200,10 +203,22 @@ int stat(const char *path, struct stat *status)
         return -1;
     }
     bda_fs_find_data_init(&find);
-    result = bda_fs_findfirst(normalized, 0x27u, &find);
+    result = bda_fs_findfirst(
+        normalized, LAVAX_FIND_FILE_ATTRIBUTES, &find
+    );
+    if (result != -1) {
+        status->st_mode = S_IFREG;
+        status->st_size = find.size_or_aux;
+        (void)bda_fs_findclose(&find);
+        return 0;
+    }
+    bda_fs_find_data_init(&find);
+    result = bda_fs_findfirst(
+        normalized, LAVAX_FIND_ENTRY_ATTRIBUTES, &find
+    );
     if (result == -1) return -1;
-    status->st_mode = (find.attr_or_flags & 0x10u) ? S_IFDIR : S_IFREG;
-    status->st_size = find.size_or_aux;
+    status->st_mode = S_IFDIR;
+    status->st_size = 0u;
     (void)bda_fs_findclose(&find);
     return 0;
 }
@@ -237,7 +252,9 @@ DIR *opendir(const char *path)
     if (!directory) return 0;
     memset(directory, 0, sizeof(*directory));
     bda_fs_find_data_init(&directory->find);
-    if (bda_fs_findfirst(pattern, 0x27u, &directory->find) == -1) {
+    if (bda_fs_findfirst(
+            pattern, LAVAX_FIND_ENTRY_ATTRIBUTES, &directory->find
+        ) == -1) {
         free(directory);
         return 0;
     }
