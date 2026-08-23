@@ -27,16 +27,19 @@ MIPS BDA 运行，显示、实体键、触摸、时钟和文件系统由 9588 �
 
 ## 快速开始
 
-1. 从 [最新 Release](https://github.com/HelloClyde/bbk9588-lavax/releases/latest)
-   下载 `LavaX.bda`，通过设备正常的 BDA 安装方式安装；程序名称显示为 `LavaX`。
-2. 从你有权使用的原版介质中取出完整的 `LavaXOS` 文件夹，复制到
-   `B:\LavaXOS`；没有 B 盘时也可放到 `A:\LavaXOS`。
-3. 确认至少存在 `LavaXOS\System\Shell.sys`，然后启动 `LavaX`。
-4. 进入 Shell 后依次选择 `LAVA`、`Lava8`，再选择 `.lav` 游戏并按
+1. 从 [最新 Release](https://github.com/HelloClyde/BBK9588-lavax/releases/latest)
+   下载 `LavaX.bda` 和 `LavaXOS.zip`。
+2. 通过设备正常的 BDA 安装方式安装 `LavaX.bda`；程序名称显示为 `LavaX`。
+3. 解压 `LavaXOS.zip`，把其中完整的 `LavaXOS` 文件夹复制到 `B:\LavaXOS`；
+   没有 B 盘时也可放到 `A:\LavaXOS`。
+4. 确认至少存在 `LavaXOS\System\Shell.sys`，然后启动 `LavaX`。
+5. 进入 Shell 后依次选择 `LAVA`、`Lava8`，再选择 `.lav` 游戏并按
    Enter/确定运行。按 ESC/退出返回上一级；同时按住 Enter + ESC 1.5 秒退出 BDA。
 
-Release 只包含 BDA，不包含 LavaXOS、游戏或 ROM。下载后可用同一 Release 中的
-`LavaX.bda.sha256` 校验文件完整性。
+`LavaXOS.zip` 来自 GPL-2.0 的
+[LavaXOS 上游目录](https://gitee.com/jacklee72/lavaxos/tree/master/LavaXOS)，包含系统、
+应用和示例游戏，但已排除 `_NDS` 目录及所有 `.nds` 文件。Release 中的两个
+`.sha256` 文件可分别校验 BDA 和运行包完整性。
 
 如果需要从源码构建，请准备 Windows PowerShell、Git 和 Python 3：
 
@@ -48,6 +51,15 @@ cd bbk9588-lavax
 ```
 
 构建结果为 `build\LavaX.bda`。
+
+如需生成与 Release 相同的运行包：
+
+```powershell
+.\tools\package-runtime.ps1
+```
+
+脚本按 `deps.lock.psd1` 下载固定上游提交，输出 `build\LavaXOS.zip`，并验证包内
+存在 `System\Shell.sys` 且不含 `_NDS` 或 `.nds` 文件。
 
 ## 选择游戏
 
@@ -71,7 +83,7 @@ cd lavax-for9588
 
 仓库的 GitHub Actions 会在 `main`、Pull Request 和手动触发时验证构建。推送
 任意 Tag（建议使用 `v0.1.0` 这样的版本号）后，会自动创建 GitHub Release，并附带
-`LavaX.bda` 与 SHA-256 校验文件：
+`LavaX.bda`、`LavaXOS.zip` 及各自的 SHA-256 校验文件：
 
 ```powershell
 git tag v0.1.0
@@ -99,8 +111,8 @@ Shell 启动，用于端口冒烟；它不会改动源目录。
 
 ## 放置运行文件
 
-本仓库只包含 GPL-2.0 的 LavaXVM 源码，不分发 LavaXOS 系统、游戏或 ROM。
-请从你有权使用的原版介质中，把整个 `LavaXOS` 目录复制到设备：
+Release 提供从上游固定提交打包的 `LavaXOS.zip`。解压后把整个 `LavaXOS` 目录
+复制到设备：
 
 ```text
 B:\LavaXOS\System\Shell.sys
@@ -108,8 +120,9 @@ B:\LavaXOS\System\Config.ini
 B:\LavaXOS\PROGRAM\...
 ```
 
-也可以放在 `A:\LavaXOS`。BDA 与 `LavaXOS` 目录相互独立，不要把 ROM 文件复制进
-BDA。若缺少 `Shell.sys`，程序会显示可读的诊断页面而不是黑屏。
+也可以放在 `A:\LavaXOS`。BDA 与 `LavaXOS` 目录相互独立；运行包不含 NDS 文件，
+也不要自行把 ROM 文件复制进 BDA。若缺少 `Shell.sys`，程序会显示可读的诊断页面
+而不是黑屏。运行包内的 `SOURCE.txt` 记录来源和固定提交，`LICENSE` 为上游许可证。
 
 ## 已知边界
 
@@ -131,5 +144,5 @@ BDA。若缺少 `Shell.sys`，程序会显示可读的诊断页面而不是黑�
 ## 许可证
 
 本项目整体按 [GNU GPL v2.0](LICENSE) 发布。LavaXVM 的上游来源、固定版本和本地修改
-说明见 [THIRD_PARTY.md](THIRD_PARTY.md)。LavaXOS 运行文件、游戏及 ROM 不包含在
-本仓库中。
+说明见 [THIRD_PARTY.md](THIRD_PARTY.md)。LavaXOS 运行文件不直接提交到本仓库，
+而是在发布时从固定上游提交打包；NDS 文件和其他 ROM 不包含在 Release 中。

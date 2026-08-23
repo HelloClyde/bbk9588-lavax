@@ -47,11 +47,18 @@ jobs:
         shell: pwsh
         run: .\tools\build.ps1 -Clean -SkipToolchainSetup
 
-      - name: Write SHA-256 checksum
+      - name: Package LavaXOS runtime
+        shell: pwsh
+        run: .\tools\package-runtime.ps1
+
+      - name: Write SHA-256 checksums
         shell: pwsh
         run: |
-          $hash = (Get-FileHash -LiteralPath build\LavaX.bda -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  LavaX.bda" | Set-Content -LiteralPath build\LavaX.bda.sha256 -Encoding ascii
+          foreach ($name in @('LavaX.bda', 'LavaXOS.zip')) {
+            $path = Join-Path build $name
+            $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name" | Set-Content -LiteralPath "$path.sha256" -Encoding ascii
+          }
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
@@ -60,6 +67,8 @@ jobs:
           path: |
             build/LavaX.bda
             build/LavaX.bda.sha256
+            build/LavaXOS.zip
+            build/LavaXOS.zip.sha256
           if-no-files-found: error
           retention-days: 14
 
@@ -87,11 +96,15 @@ jobs:
             gh release upload "$GITHUB_REF_NAME" \
               release-assets/LavaX.bda \
               release-assets/LavaX.bda.sha256 \
+              release-assets/LavaXOS.zip \
+              release-assets/LavaXOS.zip.sha256 \
               --clobber
           else
             gh release create "$GITHUB_REF_NAME" \
               release-assets/LavaX.bda \
               release-assets/LavaX.bda.sha256 \
+              release-assets/LavaXOS.zip \
+              release-assets/LavaXOS.zip.sha256 \
               --verify-tag \
               --generate-notes \
               --title "LavaX $GITHUB_REF_NAME"

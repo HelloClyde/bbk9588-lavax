@@ -7,5 +7,7 @@
         Url = 'https://gitee.com/jacklee72/lavaxos.git'
         Commit = '7c43a0f368dbb6bd55f793c5015377f5973a58f7'
         Mode = 'vendored GPL-2.0 source subset'
+        RuntimePath = 'LavaXOS'
+        RuntimeMode = 'release package excluding _NDS and all .nds files'
     }
 }
