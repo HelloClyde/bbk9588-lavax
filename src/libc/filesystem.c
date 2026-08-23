@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 
 #define LAVAX_PATH_MAX 260u
+/* The 9588 firmware enumerates regular files and directories separately. */
 #define LAVAX_FIND_FILE_ATTRIBUTES 0x27u
-/* Include the FAT directory bit (0x10) when discovering Shell entries. */
 #define LAVAX_FIND_ENTRY_ATTRIBUTES 0x37u
 
 struct j2me9588_file {
@@ -20,10 +20,14 @@ struct j2me9588_file {
 };
 
 struct lavax9588_dir {
-    bda_fs_find_data_t find;
+    bda_fs_find_data_t directory_find;
+    bda_fs_find_data_t file_find;
     struct dirent entry;
-    int first_pending;
-    int valid;
+    int directory_first_pending;
+    int file_first_pending;
+    int directory_valid;
+    int file_valid;
+    int phase;
 };
 
 static char g_runtime_root[16];
@@ -251,37 +255,74 @@ DIR *opendir(const char *path)
     directory = (DIR *)malloc(sizeof(*directory));
     if (!directory) return 0;
     memset(directory, 0, sizeof(*directory));
-    bda_fs_find_data_init(&directory->find);
+    bda_fs_find_data_init(&directory->directory_find);
     if (bda_fs_findfirst(
-            pattern, LAVAX_FIND_ENTRY_ATTRIBUTES, &directory->find
-        ) == -1) {
+            pattern, LAVAX_FIND_ENTRY_ATTRIBUTES, &directory->directory_find
+        ) != -1) {
+        directory->directory_first_pending = 1;
+        directory->directory_valid = 1;
+    }
+    bda_fs_find_data_init(&directory->file_find);
+    if (bda_fs_findfirst(
+            pattern, LAVAX_FIND_FILE_ATTRIBUTES, &directory->file_find
+        ) != -1) {
+        directory->file_first_pending = 1;
+        directory->file_valid = 1;
+    }
+    if (!directory->directory_valid && !directory->file_valid) {
         free(directory);
         return 0;
     }
-    directory->first_pending = 1;
-    directory->valid = 1;
     return directory;
 }
 
 struct dirent *readdir(DIR *directory)
 {
+    bda_fs_find_data_t *find;
+    int *first_pending;
     const char *leaf;
-    if (!directory || !directory->valid) return 0;
-    if (directory->first_pending) {
-        directory->first_pending = 0;
-    } else if (bda_fs_findnext(&directory->find) == -1) {
+    if (!directory) return 0;
+    for (;;) {
+        if (directory->phase == 0) {
+            if (!directory->directory_valid) {
+                directory->phase = 1;
+                continue;
+            }
+            find = &directory->directory_find;
+            first_pending = &directory->directory_first_pending;
+        } else {
+            if (!directory->file_valid) return 0;
+            find = &directory->file_find;
+            first_pending = &directory->file_first_pending;
+        }
+        if (*first_pending) {
+            *first_pending = 0;
+            break;
+        }
+        if (bda_fs_findnext(find) != -1) break;
+        if (directory->phase == 0) {
+            directory->phase = 1;
+            continue;
+        }
         return 0;
     }
-    leaf = path_leaf(directory->find.name_or_path);
+    leaf = path_leaf(find->name_or_path);
     (void)strlcpy(directory->entry.d_name, leaf, sizeof(directory->entry.d_name));
     return &directory->entry;
 }
 
 int closedir(DIR *directory)
 {
-    int result;
+    int result = 0;
     if (!directory) return -1;
-    result = directory->valid ? bda_fs_findclose(&directory->find) : 0;
+    if (directory->directory_valid &&
+        bda_fs_findclose(&directory->directory_find) != 0) {
+        result = -1;
+    }
+    if (directory->file_valid &&
+        bda_fs_findclose(&directory->file_find) != 0) {
+        result = -1;
+    }
     free(directory);
     return result;
 }
